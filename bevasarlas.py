@@ -38,8 +38,72 @@ tejfol: 160 Ft
 # 3 külön függvényben legyen megoldva!
 # (Ezen felül lehetnek további segédfüggvények.)
 
-def main():
-    pass
 
-if __name__ == '__main__':
-    main()
+import json
+import math
+
+AKCIO = dict[str, int]
+AKCIOK = list[AKCIO]
+
+BAD_VALUE = -1
+
+DBNEV = "akciok.json"
+
+def load_akciok() -> AKCIOK:
+    akciok : AKCIOK = []
+    with open(DBNEV, "r", encoding="utf-8") as jsonfile:
+        akciok = json.load(jsonfile)
+    return akciok
+    
+
+def collect_cheapest(akciok: AKCIOK) -> AKCIO:
+    legolcsobb : AKCIO = {}
+    for akcio in akciok:
+        for etel, ar in akcio.items():
+            olcsoar = legolcsobb.get(etel, 0)
+            if olcsoar == 0 or ar < olcsoar:
+                legolcsobb[etel] = ar
+    return legolcsobb
+
+def print_lista(etellista: AKCIO):
+    for etel, ar in etellista.items():
+        print(f"{etel}: {ar} Ft")
+
+
+def sum_shopping(ajanlat: AKCIO, bevasarlolista : list[str]) -> int:
+    db = 0
+    osszar =  0
+    for etel in bevasarlolista:
+        ar = ajanlat.get(etel, BAD_VALUE)
+        if ar != BAD_VALUE:
+            db +=1
+            osszar += ar
+    if db == len(bevasarlolista):
+        return osszar
+    return math.inf
+
+
+def search_cheapest_store(akciok: AKCIOK, etellista: list[str]) -> int:
+    arak = [sum_shopping(akcio, etellista) for akcio in akciok ]
+    
+    if min(arak) < math.inf:
+        return arak.index(min(arak))
+    return BAD_VALUE 
+    
+
+def print_offer(akciok: AKCIOK, etellista: list[str], sorszam: int):
+    if sorszam == BAD_VALUE:
+        print('Nincs olyan bolt, ahol minden termek kaphato!')
+    else: 
+        print(f'{sorszam + 1}. boltban {sum_shopping(akciok[sorszam], etellista)} Ft')
+
+
+def main():
+    akciok = load_akciok()
+    print_lista(collect_cheapest(akciok))
+
+    etellista = input("Kérem a bevásárlólistát szóközökkel elválasztva: ").split()
+    olcsobolt = search_cheapest_store(akciok, etellista)
+    print_offer(akciok, etellista, olcsobolt)
+
+main()
